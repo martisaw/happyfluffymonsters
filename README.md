@@ -13,3 +13,7 @@ Use `./venv/Scripts/activate.ps1` to activate the virtual environment.
 ## Requirements
 
 `pip install -r requirements.txt`
+
+## OPEN AI API
+
+https://platform.openai.com/docs/api-reference
