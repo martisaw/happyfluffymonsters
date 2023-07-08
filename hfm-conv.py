@@ -10,6 +10,8 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
+    TypeHandler,
+    ApplicationHandlerStop
 )
 
 from openaiwrapper1 import OpenAiWrapper
@@ -46,6 +48,15 @@ def clean_variables():
         {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'}
     ] # filled with data for mocking!
 
+SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]  # Allows users
+
+async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id in SPECIAL_USERS:
+        pass
+    else:
+        await update.effective_message.reply_text("Hey! You are not allowed to use me!")
+        raise ApplicationHandlerStop
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     clean_variables()
 
@@ -56,6 +67,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return PROMPT
 
 async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # FIXME I cannot /cancel this :D 
     global tmp_prompt 
     global tmp_media_list
     tmp_prompt = update.message.text
@@ -124,7 +136,8 @@ def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(os.getenv('TOKEN')).build()
-
+    handler = TypeHandler(Update, callback) # Making a handler for the type Update
+    application.add_handler(handler, -1) # Default is 0, so we are giving it a number below 0
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
