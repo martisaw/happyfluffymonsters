@@ -142,7 +142,7 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            PROMPT:[MessageHandler(filters.TEXT, prompt)],
+            PROMPT:[MessageHandler(filters.TEXT & ~filters.COMMAND, prompt)],
             SELECT:[
                 CommandHandler('skip', skip_select),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, select)# filters.TEXT to unprecise!
