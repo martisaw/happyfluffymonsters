@@ -46,6 +46,8 @@ class OpenAiWrapper:
         self.dalle_picture_size = dalle_picture_size
 
         self.chatGPT_model=chatGPT_model
+
+        logging.info(f'Initialized OpenAiWrapper with dalle_n_pictures={self.dalle_n_pictures}, dalle_pictures_size={self.dalle_picture_size} and chatGPT_model={self.chatGPT_model}')
     
     def __get_image_size_string(self, number):
         if not isinstance(number, int):
@@ -73,7 +75,9 @@ class OpenAiWrapper:
             logging.error(e.error)
 
     def create_images(self, input_prompt):
+        input_prompt = input_prompt.replace('.', '')
         input_prompt_with_style = input_prompt + ', digital art.'
+        logging.info(f'Creating images for prompt: {input_prompt_with_style}')
         return self.__talk_to_dalle(input_prompt_with_style)
     
     def __talk_to_chatGPT(self, input_prompt) -> str:
@@ -81,7 +85,7 @@ class OpenAiWrapper:
             return openai.ChatCompletion.create(
                 model=self.chatGPT_model,
                 messages=[
-                    {'role': 'system', 'content': 'You are an digital image creator.'},
+                    {'role': 'system', 'content': 'You are story telling image creator.'},
                     {'role': 'user', 'content': str(input_prompt)}
                 ],
                 temperature=1.0
@@ -97,9 +101,12 @@ class OpenAiWrapper:
         country = random.choice(self.countries)
         monster_question = None
         if n_monsters == 1:
-            monster_question = 'What is a happy fluffy monster doing today?'
+            monster_question = 'What is a happy fluffy monster typically doing in this country on that date?'
         else:
-            monster_question = f'What are {n_monsters} happy fluffy monsters doing today?'
+            monster_question = f'What are {n_monsters} happy fluffy monsters typically doing in this country on that date?'
         
-        prompt = f'Imagine it\'s {date_n_years_ago} and you are in {country}. There are a lot of happy fluffy monsters that behave like humans. {monster_question} Answer in one sentence. Don\'t mention the date, the country or that they behave like humans.'
+
+        prompt = f'Imagine today it\'s {date_n_years_ago}, you are in {country} and a \'happy fluffy monster\' is another term for human. {monster_question} Answer in one sentence. Do not mention the date. Do not mention the country. Only tell what is happening.'
+        # prompt = f'Imagine it\'s {date_n_years_ago}, you are in {country} and a happy fluffy monster behaves like a human. {monster_question} Answer in one sentence, but do not mention this scenario, the date, the country or that they behave like humans.'
+        logging.info(f'Created random prompt: {prompt}')
         return self.__talk_to_chatGPT(prompt)
