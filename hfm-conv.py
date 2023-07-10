@@ -1,3 +1,5 @@
+DEV = True
+
 import logging
 import os
 # openaiwrapper load environment file ... FIXME
@@ -20,9 +22,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from openaiwrapper1 import OpenAiWrapper
+from openaiwrapper1 import OpenAiWrapper, OpenAiWrapperMock
 
-openaiwrapper = OpenAiWrapper()
+if DEV is not True:
+    openaiwrapper = OpenAiWrapper()
+else:
+    openaiwrapper = OpenAiWrapperMock()
 
 PROMPT, SELECT, SUMMARY = range(3)
 
@@ -30,25 +35,22 @@ PROMPT, SELECT, SUMMARY = range(3)
 tmp_prompt = None
 tmp_media_list = []
 tmp_select = None
-image_list = [
-    {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'},
-    {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'}
-] # filled with data for mocking!
+image_list = []
 
-def clean_variables():
+def clean_global_variables():
+    # 'global' indicates that I want to manipulate the variables outside this function.
     global tmp_prompt
     global tmp_media_list
     global tmp_select
     global image_list
+
     tmp_prompt = None
     tmp_media_list = []
     tmp_select = None
-    image_list = [
-        {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'},
-        {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'}
-    ] # filled with data for mocking!
+    image_list = []
 
-SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]  # Allows users
+# Only allows predefined users
+SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]  
 
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id in SPECIAL_USERS:
@@ -58,7 +60,7 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         raise ApplicationHandlerStop
 
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    clean_variables()
+    clean_global_variables()
 
     await update.message.reply_text('running fully automated mode')
     auto_prompt = openaiwrapper.create_randomized_prompt()
@@ -77,7 +79,7 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('done. enjoy.')
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    clean_variables()
+    clean_global_variables()
 
     await update.message.reply_text(
         'Hey there! I\'m Bubbles 🫧, your happy fluffy monster creator. \n\nLet\'s generate happy fluffy monsters 👹. \n\nWhat are my peers doing today?' 
