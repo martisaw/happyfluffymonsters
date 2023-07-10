@@ -35,23 +35,21 @@ PROMPT, SELECT, SUMMARY = range(3)
 tmp_prompt = None
 tmp_media_list = []
 tmp_select = None
-image_list = []
 
 def clean_global_variables():
     # 'global' indicates that I want to manipulate the variables outside this function.
     global tmp_prompt
     global tmp_media_list
     global tmp_select
-    global image_list
 
     tmp_prompt = None
-    tmp_media_list = []
+    tmp_media_list = [] # FIXME
     tmp_select = None
-    image_list = []
 
 # Only allows predefined users
 SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]  
 
+# Security
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id in SPECIAL_USERS:
         pass
@@ -59,13 +57,16 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("Hey! You are not allowed to use me!")
         raise ApplicationHandlerStop
 
+# TODO  prompt and monstergpt share the same code -> externalize
+
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     clean_global_variables()
+    global tmp_prompt
 
     await update.message.reply_text('running fully automated mode')
-    auto_prompt = openaiwrapper.create_randomized_prompt()
-    await update.message.reply_text(f'generated prompt: {auto_prompt}')
-    image_list = openaiwrapper.create_images(auto_prompt) # local
+    tmp_prompt = openaiwrapper.create_randomized_prompt()
+    await update.message.reply_text(f'generated prompt: {tmp_prompt}')
+    image_list = openaiwrapper.create_images(tmp_prompt) # local
     
     count = 1
     reply_list = []
@@ -76,7 +77,16 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         count = count + 1
     
     await update.message.reply_media_group(media=tmp_media_list)
-    await update.message.reply_text('done. enjoy.')
+
+    reply_keyboard = [reply_list]
+
+    await update.message.reply_text(
+        'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, one_time_keyboard=True
+        )
+    )
+
+    return SELECT
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     clean_global_variables()
@@ -129,6 +139,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
     await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
+    # TODO Save all information in a variable
 
     return SUMMARY
 
@@ -159,11 +170,11 @@ def main() -> None:
     handler = TypeHandler(Update, callback) # Making a handler for the type Update
     application.add_handler(handler, -1) # Default is 0, so we are giving it a number below 0
     
-    application.add_handler(CommandHandler('monstergpt', monstergpt))
+    # application.add_handler(CommandHandler('monstergpt', monstergpt))
    
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[CommandHandler("start", start), CommandHandler('monstergpt', monstergpt)],
         states={
             PROMPT:[MessageHandler(filters.TEXT & ~filters.COMMAND, prompt)],
             SELECT:[
