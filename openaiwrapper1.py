@@ -74,8 +74,8 @@ class OpenAiWrapper:
             logging.error(e.http_status)
             logging.error(e.error)
 
-    def create_images(self, input_prompt):
-        input_prompt = input_prompt.replace('.', '')
+    def create_images(self, input_prompt): # TODO make style a parameter
+        input_prompt = input_prompt.replace('.', '') 
         input_prompt_with_style = input_prompt + ', digital art.'
         logging.info(f'Creating images for prompt: {input_prompt_with_style}')
         return self.__talk_to_dalle(input_prompt_with_style)
@@ -110,3 +110,17 @@ class OpenAiWrapper:
         # prompt = f'Imagine it\'s {date_n_years_ago}, you are in {country} and a happy fluffy monster behaves like a human. {monster_question} Answer in one sentence, but do not mention this scenario, the date, the country or that they behave like humans.'
         logging.info(f'Created random prompt: {prompt}')
         return self.__talk_to_chatGPT(prompt)
+    
+class OpenAiWrapperMock:
+
+    def __init__(self) -> None:
+        load_dotenv('./hfm.env') # fixme
+
+    def create_images(self, input_prompt) -> list:
+        return [
+            {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'},
+            {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'}
+        ]
+
+    def create_randomized_prompt(self) -> str:
+        return 'Dev mode sample prompt.'
