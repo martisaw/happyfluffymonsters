@@ -1,3 +1,5 @@
 python-telegram-bot
 openai
 python-dotenv
+instagrapi
+Pillow
