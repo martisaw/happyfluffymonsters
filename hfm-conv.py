@@ -128,7 +128,11 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
     sent_photo = await sent_message.photo[-1].get_file()
-    file_name = context.user_data.get('prompt').replace(" ", "_") + "jpg" # TODO check if a dot exists!
+    file_name = context.user_data.get('prompt').replace(" ", "_") 
+    if file_name.endswith('.'):
+        file_name = file_name + "jpg"
+    else:
+        file_name = file_name + ".jpg"
     file_path = await sent_photo.download_to_drive(file_name)
     context.user_data['ig_photo']=file_path
     context.user_data['ig_caption']=caption
@@ -137,6 +141,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def skip_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text('alright, skipped - see ya 🤓')
+    context.user_data.clear()
     return ConversationHandler.END
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
