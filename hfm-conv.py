@@ -123,7 +123,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     for media_item in context.user_data.get('media_list'):
         if media_item.caption == tmp_select:
             tmp_url = media_item.media
-    caption = context.user_data.get('prompt') + '\n\n #happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart'
+    caption = context.user_data.get('prompt') + '\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart'
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
