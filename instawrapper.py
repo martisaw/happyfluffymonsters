@@ -4,6 +4,12 @@ import os
 from dotenv import load_dotenv
 import logging
 
+# Enable logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
 class InstaWrapper:
 
     def __init__(self) -> None:
@@ -37,7 +43,7 @@ class InstaWrapper:
                 try:
                     self.cl.get_timeline_feed()
                 except LoginRequired:
-                    logging.info("Session is invalid, need to login via username and password")
+                    logger.info("Session is invalid, need to login via username and password")
 
                     old_session = self.cl.get_settings()
 
@@ -48,16 +54,16 @@ class InstaWrapper:
                     self.cl.login(self.user, self.password)
                 login_via_session = True
             except Exception as e:
-                logging.info("Couldn't login user using session information: %s" % e)
+                logger.info("Couldn't login user using session information: %s" % e)
 
         if not login_via_session:
             try:
-                logging.info("Attempting to login via username and password. username: %s" % self.user)
+                logger.info("Attempting to login via username and password. username: %s" % self.user)
                 if self.cl.login(self.user, self.password):
                     login_via_pw = True
                     self.cl.dump_settings("instagrapi-session.json")
             except Exception as e:
-                logging.info("Couldn't login user using username and password: %s" % e)
+                logger.info("Couldn't login user using username and password: %s" % e)
 
         if not login_via_pw and not login_via_session:
             raise Exception("Couldn't login user with either password or session")
@@ -74,4 +80,4 @@ class InstaWrapperMock:
 
 
 #insta = InstaWrapper()
-#insta.upload_photo('./cake.jpg', 'a hfm with cake \n\n#happy #test')
+#insta.upload_photo('./bubbles.jpg', 'a hfm with cake \n\n#happy #test')

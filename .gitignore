@@ -2,3 +2,5 @@ venv
 hfm.env
 __pycache__
 instagrapi-session.json
+*.jpg
+*.png

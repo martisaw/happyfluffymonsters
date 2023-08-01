@@ -23,11 +23,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 from openaiwrapper1 import OpenAiWrapper, OpenAiWrapperMock
+from instawrapper import InstaWrapper, InstaWrapperMock
 
 if DEV is not True:
     openaiwrapper = OpenAiWrapper()
+    instawrapper = InstaWrapper()
 else:
     openaiwrapper = OpenAiWrapperMock()
+    instawrapper = InstaWrapperMock()
 
 PROMPT, SELECT, SUMMARY = range(3)
 
@@ -35,19 +38,28 @@ PROMPT, SELECT, SUMMARY = range(3)
 tmp_prompt = None
 tmp_media_list = []
 tmp_select = None
+ig_photo = None
+ig_caption = None
+
+#FIXME what about two users at the same time and only one variable temp here?
 
 def clean_global_variables():
     # 'global' indicates that I want to manipulate the variables outside this function.
     global tmp_prompt
     global tmp_media_list
     global tmp_select
+    global ig_caption
+    global ig_photo
 
     tmp_prompt = None
     tmp_media_list = [] # FIXME
     tmp_select = None
+    
+    ig_photo = None
+    ig_caption = None
 
 # Only allows predefined users
-SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]  
+SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]
 
 # Security
 async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -130,6 +142,9 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     global tmp_select
+    global ig_photo
+    global ig_caption
+
     tmp_select = update.message.text
     tmp_url = None
     for media_item in tmp_media_list:
@@ -137,9 +152,13 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             tmp_url = media_item.media
     caption = tmp_prompt + '\n\n #happyfluffymonsters#digitalart'
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
-    await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
+    sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
-    # TODO Save all information in a variable
+    sent_photo = await sent_message.photo[-1].get_file()
+    file_name = tmp_prompt.replace(" ", "_") + "jpg"
+    file_path = await sent_photo.download_to_drive(file_name)
+    ig_photo=file_path
+    ig_caption=caption
 
     return SUMMARY
 
@@ -148,8 +167,10 @@ async def skip_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return ConversationHandler.END
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text('sorry, not yet implemented 😿 bye!')
-    
+    # await update.message.reply_text('sorry, not yet implemented 😿 bye!')
+    await update.message.reply_text('uploading!')
+    instawrapper.upload_photo(ig_photo, ig_caption)
+    await update.message.reply_text('done!')
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

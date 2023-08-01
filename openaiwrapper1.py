@@ -74,7 +74,7 @@ class OpenAiWrapper:
             logging.error(e.http_status)
             logging.error(e.error)
 
-    def create_images(self, input_prompt): # TODO make style a parameter
+    def create_images(self, input_prompt): # TODO make style a parameter TODO check that input prompt < 1000
         input_prompt = input_prompt.replace('.', '') 
         input_prompt_with_style = input_prompt + ', digital art.'
         logging.info(f'Creating images for prompt: {input_prompt_with_style}')
