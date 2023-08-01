@@ -106,7 +106,7 @@ class OpenAiWrapper:
             monster_question = f'What are {n_monsters} happy fluffy monsters typically doing in this country on that date?'
         
 
-        prompt = f'Imagine today it\'s {date_n_years_ago}, you are in {country} and a \'happy fluffy monster\' is another term for human. {monster_question} Answer in one sentence. Do not mention the date. Do not mention the country. Only tell what is happening.'
+        prompt = f'Imagine today it\'s {date_n_years_ago}, you are in {country} and a \'happy fluffy monster\' is another term for human. {monster_question} Answer in one sentence. Do not mention the date. Do not mention {country}. Only tell what is happening. Take this as examples: "Two happy fluffy monsters are singing in the rain" or "A cute baby monster with a red balloon" or "A happy fluffy monster is watering a monstera plant".'
         # prompt = f'Imagine it\'s {date_n_years_ago}, you are in {country} and a happy fluffy monster behaves like a human. {monster_question} Answer in one sentence, but do not mention this scenario, the date, the country or that they behave like humans.'
         logging.info(f'Created random prompt: {prompt}')
         return self.__talk_to_chatGPT(prompt)
