@@ -49,7 +49,6 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    clean_global_variables()
 
     await update.message.reply_text('running fully automated mode')
     context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
@@ -79,8 +78,6 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
-    
-    clean_global_variables()
 
     await update.message.reply_text(
         'Hey there! I\'m Bubbles 🫧, your happy fluffy monster creator. \n\nLet\'s generate happy fluffy monsters 👹. \n\nWhat are my peers doing today?' 
