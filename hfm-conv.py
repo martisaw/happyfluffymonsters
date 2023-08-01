@@ -34,30 +34,6 @@ else:
 
 PROMPT, SELECT, SUMMARY = range(3)
 
-# Temporary Variables for saving context
-tmp_prompt = None
-tmp_media_list = []
-tmp_select = None
-ig_photo = None
-ig_caption = None
-
-#FIXME what about two users at the same time and only one variable temp here?
-
-def clean_global_variables():
-    # 'global' indicates that I want to manipulate the variables outside this function.
-    global tmp_prompt
-    global tmp_media_list
-    global tmp_select
-    global ig_caption
-    global ig_photo
-
-    tmp_prompt = None
-    tmp_media_list = [] # FIXME
-    tmp_select = None
-    
-    ig_photo = None
-    ig_caption = None
-
 # Only allows predefined users
 SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]
 
@@ -72,23 +48,24 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # TODO  prompt and monstergpt share the same code -> externalize
 
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
     clean_global_variables()
-    global tmp_prompt
 
     await update.message.reply_text('running fully automated mode')
-    tmp_prompt = openaiwrapper.create_randomized_prompt()
-    await update.message.reply_text(f'generated prompt: {tmp_prompt}')
-    image_list = openaiwrapper.create_images(tmp_prompt) # local
+    context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
+    await update.message.reply_text(f'generated prompt: {context.user_data.get("prompt")}')
+    image_list = openaiwrapper.create_images(context.user_data.get('prompt')) # local
     
     count = 1
     reply_list = []
+    context.user_data['media_list'] = []
     for image in image_list:
         caption = '#' + str(count)
-        tmp_media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
+        context.user_data['media_list'].append(InputMediaPhoto(media=image['url'], caption=caption))
         reply_list.append(caption)
         count = count + 1
     
-    await update.message.reply_media_group(media=tmp_media_list)
+    await update.message.reply_media_group(media=context.user_data.get('media_list'))
 
     reply_keyboard = [reply_list]
 
@@ -101,6 +78,8 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return SELECT
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    context.user_data.clear()
+    
     clean_global_variables()
 
     await update.message.reply_text(
@@ -110,25 +89,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return PROMPT
 
 async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    global tmp_prompt 
-    global tmp_media_list
-    tmp_prompt = update.message.text
+    
+    context.user_data['prompt'] = update.message.text
 
     await update.message.reply_text(
         'Perfect ✨ I\'ll ask dalle to create some images. This will take some time. Relax for a bit 💆'
     )
     # The next line will talk to openai!
-    image_list = openaiwrapper.create_images(tmp_prompt)
+    image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
     
     count = 1
     reply_list = []
+    context.user_data['media_list'] = []
     for image in image_list:
         caption = '#' + str(count)
-        tmp_media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
+        context.user_data['media_list'].append(InputMediaPhoto(media=image['url'], caption=caption))
         reply_list.append(caption)
         count = count + 1
     
-    await update.message.reply_media_group(media=tmp_media_list)
+    await update.message.reply_media_group(media=context.user_data['media_list'])
     
     reply_keyboard = [reply_list]
 
@@ -141,24 +120,21 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return SELECT
 
 async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    global tmp_select
-    global ig_photo
-    global ig_caption
 
     tmp_select = update.message.text
     tmp_url = None
-    for media_item in tmp_media_list:
+    for media_item in context.user_data.get('media_list'):
         if media_item.caption == tmp_select:
             tmp_url = media_item.media
-    caption = tmp_prompt + '\n\n #happyfluffymonsters#digitalart'
+    caption = context.user_data.get('prompt') + '\n\n #happyfluffymonsters#digitalart'
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
     sent_photo = await sent_message.photo[-1].get_file()
-    file_name = tmp_prompt.replace(" ", "_") + "jpg"
+    file_name = context.user_data.get('prompt').replace(" ", "_") + "jpg" # TODO check if a dot exists!
     file_path = await sent_photo.download_to_drive(file_name)
-    ig_photo=file_path
-    ig_caption=caption
+    context.user_data['ig_photo']=file_path
+    context.user_data['ig_caption']=caption
 
     return SUMMARY
 
@@ -169,12 +145,14 @@ async def skip_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # await update.message.reply_text('sorry, not yet implemented 😿 bye!')
     await update.message.reply_text('uploading!')
-    instawrapper.upload_photo(ig_photo, ig_caption)
+    instawrapper.upload_photo(context.user_data.get('ig_photo'), context.user_data.get('ig_caption'))
     await update.message.reply_text('done!')
+    context.user_data.clear()
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels and ends the conversation."""
+    context.user_data.clear()
     user = update.message.from_user
     logger.info("User %s canceled the conversation.", user.first_name)
     await update.message.reply_text(
