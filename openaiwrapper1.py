@@ -119,7 +119,7 @@ class OpenAiWrapperMock:
     def create_images(self, input_prompt) -> list:
         return [
             {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'},
-            {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Simple_Stick_Figure.svg/170px-Simple_Stick_Figure.svg.png'}
+            {'url':'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Friendly_stickman.svg/400px-Friendly_stickman.svg.png'}
         ]
 
     def create_randomized_prompt(self) -> str:

@@ -116,6 +116,31 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     return SELECT
 
+async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    
+    await update.message.reply_text(
+        'Choose again.'
+    )
+    
+    count = 1
+    reply_list = []
+    for image in context.user_data['media_list']:
+        caption = '#' + str(count)
+        reply_list.append(caption)
+        count = count + 1
+    
+    await update.message.reply_media_group(media=context.user_data['media_list'])
+    
+    reply_keyboard = [reply_list]
+
+    await update.message.reply_text(
+        'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, one_time_keyboard=True
+        )
+    )
+    
+    return SELECT
+
 async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     tmp_select = update.message.text
@@ -126,7 +151,9 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     caption = context.user_data.get('prompt') + '\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart'
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
-    await update.message.reply_text('Send /post if you want to post on instagram or /cancel this.')
+    await update.message.reply_text('Send /post if you want to post on instagram, /reselect to choose another image or /cancel this.')
+    
+    # Move the code below to the final function -> In case of reselect this is overwritten
     sent_photo = await sent_message.photo[-1].get_file()
     file_name = context.user_data.get('prompt').replace(" ", "_") 
     if file_name.endswith('.'):
@@ -136,6 +163,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     file_path = await sent_photo.download_to_drive(file_name)
     context.user_data['ig_photo']=file_path
     context.user_data['ig_caption']=caption
+    ######
 
     return SUMMARY
 
@@ -145,10 +173,10 @@ async def skip_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     return ConversationHandler.END
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    # await update.message.reply_text('sorry, not yet implemented 😿 bye!')
-    await update.message.reply_text('uploading!')
+    
+    await update.message.reply_text('⚙️ processing ...')
     instawrapper.upload_photo(context.user_data.get('ig_photo'), context.user_data.get('ig_caption'))
-    await update.message.reply_text('done!')
+    await update.message.reply_text('Posted! See ya next time 😻')
     context.user_data.clear()
     return ConversationHandler.END
 
@@ -180,9 +208,10 @@ def main() -> None:
             PROMPT:[MessageHandler(filters.TEXT & ~filters.COMMAND, prompt)],
             SELECT:[
                 CommandHandler('skip', skip_select),
+                
                 MessageHandler(filters.TEXT & ~filters.COMMAND, select)# filters.TEXT to unprecise!
             ], 
-            SUMMARY: [CommandHandler('post', summary)],
+            SUMMARY: [CommandHandler('reselect', reselect), CommandHandler('post', summary)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
