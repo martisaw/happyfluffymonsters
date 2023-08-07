@@ -26,7 +26,7 @@ from openaiwrapper1 import OpenAiWrapper, OpenAiWrapperMock
 from instawrapper import InstaWrapper, InstaWrapperMock
 
 if DEV is not True:
-    openaiwrapper = OpenAiWrapper()
+    openaiwrapper = OpenAiWrapper(4, 1024)
     instawrapper = InstaWrapper()
 else:
     openaiwrapper = OpenAiWrapperMock()
@@ -42,31 +42,25 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id in SPECIAL_USERS:
         pass
     else:
-        await update.effective_message.reply_text("Hey! You are not allowed to use me!")
+        await update.effective_message.reply_text("Hey! You are not allowed to use me! 🚨🚓")
         raise ApplicationHandlerStop
-
-# TODO  prompt and monstergpt share the same code -> externalize
 
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
 
-    await update.message.reply_text('running fully automated mode')
+    await update.message.reply_text('🤖 ... running fully automated mode.\n\nGenerating prompt 💬')
+
     context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
-    await update.message.reply_text(f'generated prompt: {context.user_data.get("prompt")}')
-    image_list = openaiwrapper.create_images(context.user_data.get('prompt')) # local
+    await update.message.reply_text(f'🤖 ... generated prompt: {context.user_data.get("prompt")}\n\nGenerating Images 🖼️')
     
-    count = 1
-    reply_list = []
-    context.user_data['media_list'] = []
-    for image in image_list:
-        caption = '#' + str(count)
-        context.user_data['media_list'].append(InputMediaPhoto(media=image['url'], caption=caption))
-        reply_list.append(caption)
-        count = count + 1
+    image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
+    
+    media_and_keyboard = await image_proposal(image_list)
+
+    context.user_data['media_list'] = media_and_keyboard[0]
+    reply_keyboard = media_and_keyboard[1]
     
     await update.message.reply_media_group(media=context.user_data.get('media_list'))
-
-    reply_keyboard = [reply_list]
 
     await update.message.reply_text(
         'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
@@ -85,6 +79,31 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return PROMPT
 
+async def image_proposal(image_list) -> ():
+
+    count = 1
+    reply_list = []
+    media_list = []
+    for image in image_list:
+        caption = '#' + str(count)
+        media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
+        reply_list.append(caption)
+        count = count + 1
+    
+    reply_keyboard = [reply_list]
+
+    # overwrite reply_keyboard if more than two (formatting)
+    if len(reply_list) > 2:
+        chunked_reply_list = []
+        chunk_size = 2
+
+        for i in range(0, len(reply_list), chunk_size):
+            chunked_reply_list.append(reply_list[i:i+chunk_size])
+
+        reply_keyboard = chunked_reply_list
+
+    return (media_list, reply_keyboard)
+
 async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     context.user_data['prompt'] = update.message.text
@@ -95,19 +114,13 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # The next line will talk to openai!
     image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
     
-    count = 1
-    reply_list = []
-    context.user_data['media_list'] = []
-    for image in image_list:
-        caption = '#' + str(count)
-        context.user_data['media_list'].append(InputMediaPhoto(media=image['url'], caption=caption))
-        reply_list.append(caption)
-        count = count + 1
-    
+    media_and_keyboard = await image_proposal(image_list)
+
+    context.user_data['media_list'] = media_and_keyboard[0]
+    reply_keyboard = media_and_keyboard[1]
+
     await update.message.reply_media_group(media=context.user_data['media_list'])
     
-    reply_keyboard = [reply_list]
-
     await update.message.reply_text(
         'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True
