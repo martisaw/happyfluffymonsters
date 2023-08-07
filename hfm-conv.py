@@ -63,7 +63,7 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_media_group(media=context.user_data.get('media_list'))
 
     await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
+        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True
         )
     )
@@ -122,7 +122,7 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_media_group(media=context.user_data['media_list'])
     
     await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
+        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True
         )
     )
@@ -147,7 +147,7 @@ async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     reply_keyboard = [reply_list]
 
     await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /skip this.', reply_markup=ReplyKeyboardMarkup(
+        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True
         )
     )
@@ -179,11 +179,6 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     ######
 
     return SUMMARY
-
-async def skip_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.message.reply_text('alright, skipped - see ya 🤓')
-    context.user_data.clear()
-    return ConversationHandler.END
 
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
@@ -219,11 +214,8 @@ def main() -> None:
         entry_points=[CommandHandler("start", start), CommandHandler('monstergpt', monstergpt)],
         states={
             PROMPT:[MessageHandler(filters.TEXT & ~filters.COMMAND, prompt)],
-            SELECT:[
-                CommandHandler('skip', skip_select),
-                
-                MessageHandler(filters.TEXT & ~filters.COMMAND, select)# filters.TEXT to unprecise!
-            ], 
+            SELECT:[MessageHandler(filters.TEXT & ~filters.COMMAND, select)# filters.TEXT to unprecise!
+                    ], 
             SUMMARY: [CommandHandler('reselect', reselect), CommandHandler('post', summary)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
