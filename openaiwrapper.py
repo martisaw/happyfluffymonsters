@@ -82,7 +82,7 @@ class OpenAiWrapper:
             return openai.ChatCompletion.create(
                 model=self.chatGPT_model,
                 messages=[
-                    {'role': 'system', 'content': 'You are story telling image creator.'},
+                    {'role': 'system', 'content': 'You are a helpful assistant.'},
                     {'role': 'user', 'content': str(input_prompt)}
                 ],
                 temperature=1.0
