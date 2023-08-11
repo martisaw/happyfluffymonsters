@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # Load all environment variables
 load_dotenv('./hfm.env')
 
-if bool(os.getenv('DEV_MODE')) is True:
+if os.getenv('DEV_MODE') == 'yes':
     logger.info("***** running in DEV mode *****")
     openaiwrapper = OpenAiWrapperMock()
     instawrapper = InstaWrapperMock()
@@ -33,7 +33,8 @@ if bool(os.getenv('DEV_MODE')) is True:
 else:
     logger.info("***** running in PROD mode *****!")
     openaiwrapper = OpenAiWrapper(os.getenv('OPENAI_API_KEY'), 4, 1024)
-    # instawrapper = InstaWrapper(os.getenv('INSTA_USER'), os.getenv('INSTA_PW')) # FIXME InstaWrapper can't login currently because most likely the ip got blocked
+    # instawrapper = InstaWrapper(os.getenv('INSTA_USER'), os.getenv('INSTA_PW')) 
+    # FIXME InstaWrapper can't login currently because most likely the ip got blocked -> Use "residential" Proxy instead
     instawrapper = InstaWrapperMock()
 
 PROMPT, SELECT, SUMMARY = range(3)
