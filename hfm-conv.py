@@ -1,9 +1,7 @@
-DEV = True
-
+from dotenv import load_dotenv
+import os
 import logging
 import os
-# openaiwrapper load environment file ... FIXME
-
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, InputMediaPhoto
 from telegram.ext import (
     Application,
@@ -15,6 +13,8 @@ from telegram.ext import (
     TypeHandler,
     ApplicationHandlerStop
 )
+from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
+from instawrapper import InstaWrapper, InstaWrapperMock
 
 # Enable logging
 logging.basicConfig(
@@ -22,14 +22,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from openaiwrapper1 import OpenAiWrapper, OpenAiWrapperMock
-from instawrapper import InstaWrapper, InstaWrapperMock
+# Load all environment variables
+load_dotenv('./hfm.env')
 
-if DEV is not True:
-    openaiwrapper = OpenAiWrapper(4, 1024)
-    instawrapper = InstaWrapper()
-else:
+if bool(os.getenv('DEV_MODE')) is True:
+    logger.info("***** running in DEV mode *****")
     openaiwrapper = OpenAiWrapperMock()
+    instawrapper = InstaWrapperMock()
+    
+else:
+    logger.info("***** running in PROD mode *****!")
+    openaiwrapper = OpenAiWrapper(os.getenv('OPENAI_API_KEY'), 4, 1024)
+    # instawrapper = InstaWrapper(os.getenv('INSTA_USER'), os.getenv('INSTA_PW')) # FIXME InstaWrapper can't login currently because most likely the ip got blocked
     instawrapper = InstaWrapperMock()
 
 PROMPT, SELECT, SUMMARY = range(3)
@@ -79,7 +83,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return PROMPT
 
-async def image_proposal(image_list) -> ():
+async def image_proposal(image_list):
 
     count = 1
     reply_list = []

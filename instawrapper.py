@@ -1,21 +1,15 @@
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired
 import os
-from dotenv import load_dotenv
 import logging
 
-# Enable logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
 logger = logging.getLogger(__name__)
 
 class InstaWrapper:
 
-    def __init__(self) -> None:
-        load_dotenv('./hfm.env')
-        self.user = os.getenv('INSTA_USER')
-        self.password = os.getenv('INSTA_PW')
+    def __init__(self, ig_user, ig_password) -> None:
+        self.user = ig_user
+        self.password = ig_password
         self.cl = Client()
         self.cl.delay_range = [1, 3]
         self.__login_user()
@@ -73,6 +67,7 @@ class InstaWrapper:
 
 class InstaWrapperMock:
     def __init__(self) -> None:
+        logger.info("Initialized InstaWrapperMock")
         pass
 
     def upload_photo(self, image_url, image_caption):
