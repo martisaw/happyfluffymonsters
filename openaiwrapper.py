@@ -36,7 +36,35 @@ class OpenAiWrapper:
         'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
     ]
     
-    def __init__(self, openai_api_key=None, dalle_n_pictures=2, dalle_picture_size=256, chatGPT_model='gpt-3.5-turbo') -> None:
+    big_cities = [
+        "Tokyo", "New York City", "London", "Paris", "Beijing",
+        "Moscow", "Cairo", "Rio de Janeiro", "Sydney", "Toronto",
+        "Berlin", "Rome", "Bangkok", "Dubai", "Mumbai",
+        "Los Angeles", "Istanbul", "Seoul", "Mexico City", "Cape Town",
+        "Jakarta", "Madrid", "Buenos Aires", "Lima", "Nairobi",
+        "Amsterdam", "Stockholm", "New Delhi", "Vienna", "Athens",
+        "Prague", "Budapest", "Hong Kong", "Singapore", "Kuala Lumpur",
+        "Oslo", "Copenhagen", "Warsaw", "Zurich", "Helsinki",
+        "Dublin", "Lisbon", "Brussels", "Riyadh", "Doha",
+        "Manila", "Hanoi", "Brasília", "Ottawa", "Havana",
+        "Bogotá", "Caracas", "Santiago", "Montevideo", "Ljubljana",
+        "Reykjavik", "Panama City", "San Juan", "Bucharest", "Kiev",
+        "Tehran", "Baghdad", "Damascus", "Kabul", "Islamabad",
+        "Kathmandu", "Dhaka", "Colombo", "Nicosia", "Vilnius",
+        "Tallinn", "Belgrade", "Tirana", "Tbilisi", "Yerevan",
+        "Baku", "Ashgabat", "Astana", "Ulaanbaatar", "Bishkek",
+        "Tashkent", "Kuala Lumpur", "Manama", "Muscat", "Abu Dhabi",
+        "Doha", "Nur-Sultan", "Bogota", "Quito", "La Paz",
+        "Asuncion", "Paramaribo", "Georgetown", "Bridgetown", "Nassau",
+        "Kingston", "Port-au-Prince", "San Salvador", "Guatemala City", "Belmopan",
+        "Tegucigalpa", "Managua", "San Jose", "Panama City", "Lima",
+        "Caracas", "Buenos Aires", "Montevideo", "Santiago", "Brasilia",
+        "La Paz", "Sucre", "Quito", "Paramaribo", "Georgetown",
+        "Bridgetown", "Nassau", "Kingston", "Port-au-Prince", "San Salvador",
+        "Guatemala City", "Belmopan", "Tegucigalpa", "Managua", "San Jose"
+    ]
+
+    def __init__(self, openai_api_key=None, dalle_n_pictures=2, dalle_picture_size=256, chatGPT_model='gpt-4') -> None:
         openai.api_key = openai_api_key
 
         self.dalle_n_pictures = dalle_n_pictures
@@ -73,18 +101,15 @@ class OpenAiWrapper:
 
     def create_images(self, input_prompt): # TODO make style a parameter TODO check that input prompt < 1000
         input_prompt = input_prompt.replace('.', '') 
-        input_prompt_with_style = input_prompt + ', digital art.'
+        input_prompt_with_style = input_prompt + ', digital art'
         logger.info(f'Creating images for prompt: {input_prompt_with_style}')
         return self.__talk_to_dalle(input_prompt_with_style)
     
-    def __talk_to_chatGPT(self, input_prompt) -> str:
+    def __talk_to_chatGPT(self, messages) -> str:
         try:
             return openai.ChatCompletion.create(
                 model=self.chatGPT_model,
-                messages=[
-                    {'role': 'system', 'content': 'You are a helpful assistant.'},
-                    {'role': 'user', 'content': str(input_prompt)}
-                ],
+                messages=messages,
                 temperature=1.0
             ).choices[0].message.content
         except openai.error.OpenAIError as e:
@@ -95,18 +120,26 @@ class OpenAiWrapper:
         n_monsters = random.randint(1,3)
         n_years_ago = random.randint(3,20)
         date_n_years_ago = (datetime.datetime.now() - datetime.timedelta(days=n_years_ago*365)).strftime('%Y-%m-%d')
-        country = random.choice(self.countries)
+        city = random.choice(self.big_cities)
         monster_question = None
         if n_monsters == 1:
-            monster_question = 'What is a happy fluffy monster typically doing in this country on that date?'
+            monster_question = 'What is a happy fluffy monster doing in this city on that date?'
         else:
-            monster_question = f'What are {n_monsters} happy fluffy monsters typically doing in this country on that date?'
+            monster_question = f'What are {n_monsters} happy fluffy monsters doing in this city on that date?'
         
-
-        prompt = f'Imagine today it\'s {date_n_years_ago}, you are in {country} and a \'happy fluffy monster\' is another term for human. {monster_question} Answer in one sentence. Do not mention the date. Do not mention {country}. Only tell what is happening. Take this as examples: "Two happy fluffy monsters are singing in the rain" or "A cute baby monster with a red balloon" or "A happy fluffy monster is watering a monstera plant".'
-        # prompt = f'Imagine it\'s {date_n_years_ago}, you are in {country} and a happy fluffy monster behaves like a human. {monster_question} Answer in one sentence, but do not mention this scenario, the date, the country or that they behave like humans.'
-        logger.info(f'Created random prompt: {prompt}')
-        return self.__talk_to_chatGPT(prompt)
+        messages=[
+            {'role': 'system', 'content': 'You are a helpful assistant.'},
+            {'role': 'system', 'content': f'Answer in one sentence. Do not mention the date. Do not mention {city}.'},
+            {'role': 'user', 'content': f'Imagine today it\'s {date_n_years_ago}, you are in {city} and a \'happy fluffy monster\' is another term for human. {monster_question}'},
+            {'role': 'user', 'content': 'Only tell what is happening. Focus on only one activity.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'Two happy fluffy monsters are singing in the rain.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'A cute baby monster with a red balloon.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'A happy fluffy monster is watering a monstera plant.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'A red happy fluffy monster is riding a cargo bike.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'A happy fluffy monster is dancing on a rainbow.'},
+            {'role': 'system', 'name':'example_assistant', 'content': 'Two happy fluffy monsters riding a tram.'}
+        ]
+        return self.__talk_to_chatGPT(messages)
     
 class OpenAiWrapperMock:
 
