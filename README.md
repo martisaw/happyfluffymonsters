@@ -17,3 +17,5 @@ Use `./venv/Scripts/activate.ps1` to activate the virtual environment.
 ## OPEN AI API
 
 https://platform.openai.com/docs/api-reference
+
+https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
