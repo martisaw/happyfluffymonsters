@@ -141,6 +141,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
     await update.message.reply_text('Send /post if you want to post on instagram, /reselect to choose another image or /cancel this 😎')
     
+    # TODO Save all pictures!
     # Move the code below to the final function -> In case of reselect this is overwritten
     sent_photo = await sent_message.photo[-1].get_file()
     file_name = context.user_data.get('prompt').replace(" ", "_") 
@@ -160,7 +161,13 @@ async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         'Choose again.'
     )
     
-    await send_proposal(update, context)
+    await update.message.reply_media_group(media=context.user_data.get('media_list'))
+
+    await update.message.reply_text(
+        'Which one would you like to post on Instagram? ↗ \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
+            context.user_data.get('media_keyboard'), one_time_keyboard=True
+        )
+    )
     
     return SELECT
 
