@@ -56,13 +56,13 @@ async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     media_and_keyboard = await image_proposal(image_list)
 
     context.user_data['media_list'] = media_and_keyboard[0]
-    reply_keyboard = media_and_keyboard[1]
+    context.user_data['media_keyboard'] = media_and_keyboard[1]
     
     await update.message.reply_media_group(media=context.user_data.get('media_list'))
 
     await update.message.reply_text(
         'Which one would you like to post on Instagram? ↗ \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True
+            context.user_data.get('media_keyboard'), one_time_keyboard=True
         )
     )
 
@@ -125,30 +125,7 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     return SELECT
 
-async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    
-    await update.message.reply_text(
-        'Choose again.'
-    )
-    
-    count = 1
-    reply_list = []
-    for image in context.user_data['media_list']:
-        caption = '#' + str(count)
-        reply_list.append(caption)
-        count = count + 1
-    
-    await update.message.reply_media_group(media=context.user_data['media_list'])
-    
-    reply_keyboard = [reply_list]
 
-    await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True
-        )
-    )
-    
-    return SELECT
 
 async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
@@ -175,6 +152,16 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return SUMMARY
 
+async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    
+    await update.message.reply_text(
+        'Choose again.'
+    )
+    
+    await send_proposal(update, context)
+    
+    return SELECT
+
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     await update.message.reply_text('⚙️ processing ...')
@@ -184,12 +171,10 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Cancels and ends the conversation."""
     context.user_data.clear()
-    user = update.message.from_user
-    logger.info("User %s canceled the conversation.", user.first_name)
+    
     await update.message.reply_text(
-        "Bye! I hope we can talk again some day.", reply_markup=ReplyKeyboardRemove()
+        "Bye! I hope we can talk again some day 😿", reply_markup=ReplyKeyboardRemove()
     )
 
     return ConversationHandler.END
