@@ -14,6 +14,8 @@ Use `./venv/Scripts/activate.ps1` to activate the virtual environment.
 
 `pip install -r requirements.txt`
 
+`pip install -r requirements.txt --upgrade --upgrade-strategy eager` -> Für Sub-Dependencies
+
 ## OPEN AI API
 
 https://platform.openai.com/docs/api-reference
