@@ -22,6 +22,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+image_folder_path = "img"
+if not os.path.exists(image_folder_path):
+    os.makedirs(image_folder_path)
+
 # Load all environment variables
 load_dotenv('./hfm.env')
 
@@ -49,6 +53,31 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.effective_message.reply_text("Hey! You are not allowed to use me! 🚨🚓")
         raise ApplicationHandlerStop
+
+async def image_proposal(image_list):
+
+    count = 1
+    reply_list = []
+    media_list = []
+    for image in image_list:
+        caption = '#' + str(count)
+        media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
+        reply_list.append(caption)
+        count = count + 1
+    
+    reply_keyboard = [reply_list]
+
+    # overwrite reply_keyboard if more than two (formatting)
+    if len(reply_list) > 2:
+        chunked_reply_list = []
+        chunk_size = 2
+
+        for i in range(0, len(reply_list), chunk_size):
+            chunked_reply_list.append(reply_list[i:i+chunk_size])
+
+        reply_keyboard = chunked_reply_list
+
+    return (media_list, reply_keyboard)
 
 async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
@@ -88,31 +117,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     return PROMPT
 
-async def image_proposal(image_list):
-
-    count = 1
-    reply_list = []
-    media_list = []
-    for image in image_list:
-        caption = '#' + str(count)
-        media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
-        reply_list.append(caption)
-        count = count + 1
-    
-    reply_keyboard = [reply_list]
-
-    # overwrite reply_keyboard if more than two (formatting)
-    if len(reply_list) > 2:
-        chunked_reply_list = []
-        chunk_size = 2
-
-        for i in range(0, len(reply_list), chunk_size):
-            chunked_reply_list.append(reply_list[i:i+chunk_size])
-
-        reply_keyboard = chunked_reply_list
-
-    return (media_list, reply_keyboard)
-
 async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     context.user_data['prompt'] = update.message.text
@@ -125,8 +129,6 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     return SELECT
 
-
-
 async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     tmp_select = update.message.text
@@ -137,7 +139,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     caption = context.user_data.get('prompt') + '\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart'
     await update.message.reply_text('All done. Please review the following instagram post 🕵️')
     sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
-    await update.message.reply_text('Send /post if you want to post on instagram, /reselect to choose another image or /cancel this.')
+    await update.message.reply_text('Send /post if you want to post on instagram, /reselect to choose another image or /cancel this 😎')
     
     # Move the code below to the final function -> In case of reselect this is overwritten
     sent_photo = await sent_message.photo[-1].get_file()
@@ -146,7 +148,7 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         file_name = file_name + "jpg"
     else:
         file_name = file_name + ".jpg"
-    file_path = await sent_photo.download_to_drive(file_name)
+    file_path = await sent_photo.download_to_drive("./"+ image_folder_path + "/" + file_name)
     context.user_data['ig_photo']=file_path
     context.user_data['ig_caption']=caption
 
@@ -165,9 +167,13 @@ async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     
     await update.message.reply_text('⚙️ processing ...')
+    
     instawrapper.upload_photo(context.user_data.get('ig_photo'), context.user_data.get('ig_caption'))
+    
     await update.message.reply_text('Posted! See ya next time 😻')
+    
     context.user_data.clear()
+    
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
