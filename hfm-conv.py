@@ -50,14 +50,7 @@ async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("Hey! You are not allowed to use me! 🚨🚓")
         raise ApplicationHandlerStop
 
-async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-
-    await update.message.reply_text('🤖 ... running fully automated mode.\n\nGenerating prompt 💬')
-
-    context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
-    await update.message.reply_text(f'🤖 ... generated prompt: {context.user_data.get("prompt")}\n\nGenerating Images 🖼️')
-    
+async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
     
     media_and_keyboard = await image_proposal(image_list)
@@ -68,10 +61,21 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_media_group(media=context.user_data.get('media_list'))
 
     await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
+        'Which one would you like to post on Instagram? ↗ \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
             reply_keyboard, one_time_keyboard=True
         )
     )
+
+async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
+
+    await update.message.reply_text("Alrighty it's time for MONSTERGPT.\n\nLet me think about a prompt for a second ... 💬")
+
+    context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
+    
+    await update.message.reply_text(f'Okay, here you go: "{context.user_data.get("prompt")}" 😻\n\nNow I will let DALLE-2 generate some Images ... 🖼️')
+    
+    await send_proposal(update, context)
 
     return SELECT
 
@@ -79,7 +83,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data.clear()
 
     await update.message.reply_text(
-        'Hey there! I\'m Bubbles 🫧, your happy fluffy monster creator. \n\nLet\'s generate happy fluffy monsters 👹. \n\nWhat are my peers doing today?' 
+        'Hey there! I\'m Bubbles 🫧, your happy fluffy monster creator.\n\nWhat are my peers doing today?' 
     )
 
     return PROMPT
@@ -116,21 +120,8 @@ async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         'Perfect ✨ I\'ll ask dalle to create some images. This will take some time. Relax for a bit 💆'
     )
-    # The next line will talk to openai!
-    image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
-    
-    media_and_keyboard = await image_proposal(image_list)
 
-    context.user_data['media_list'] = media_and_keyboard[0]
-    reply_keyboard = media_and_keyboard[1]
-
-    await update.message.reply_media_group(media=context.user_data['media_list'])
-    
-    await update.message.reply_text(
-        'Which one would you like to post on Instagram? \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True
-        )
-    )
+    await send_proposal(update, context)
     
     return SELECT
 
@@ -181,7 +172,6 @@ async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     file_path = await sent_photo.download_to_drive(file_name)
     context.user_data['ig_photo']=file_path
     context.user_data['ig_caption']=caption
-    ######
 
     return SUMMARY
 
