@@ -2,9 +2,11 @@ from datetime import time
 from dotenv import load_dotenv
 import json
 import logging
+from PIL import Image
 from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
 import os
 import random
+import requests
 from static_messages import (
     start_greetings,
     start_examples,
@@ -78,22 +80,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return PROMPT
 
 
-async def image_proposal(image_list):
+async def image_proposal(prompt, image_list):
     count = 1
     media_list = []
+    filename = prompt.replace(" ", "_").replace(".", "").lower()
     for image in image_list:
         caption = "#" + str(count)
-        media_list.append(InputMediaPhoto(media=image["url"], caption=caption))
+        url = image["url"]
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                with open("./img/" + filename + caption + ".png", "wb") as img_file:
+                    img_file.write(response.content)
+        except:
+            pass
+        media_list.append(InputMediaPhoto(media=url, caption=caption))
         count = count + 1
     return media_list
+
+
+def save_images(image_list):
+    print(image_list)
 
 
 async def send_proposal(
     update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str
 ):
     image_list = openaiwrapper.create_images(prompt)
-
-    await update.message.reply_media_group(await image_proposal(image_list))
+    save_images(image_list)
+    await update.message.reply_media_group(await image_proposal(prompt, image_list))
 
     await update.message.reply_text(random.choice(send_proposal_insta))
 
