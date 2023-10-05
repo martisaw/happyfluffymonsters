@@ -72,8 +72,6 @@ async def security_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data.clear()
-
     await update.message.reply_text(random.choice(start_greetings))
 
     await update.message.reply_text(random.choice(start_examples))
@@ -93,17 +91,17 @@ async def image_proposal(image_list):
     return media_list
 
 
-async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    image_list = openaiwrapper.create_images(context.user_data.get("prompt"))
+async def send_proposal(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str
+):
+    image_list = openaiwrapper.create_images(prompt)
 
-    context.user_data["media_list"] = await image_proposal(image_list)
-
-    await update.message.reply_media_group(media=context.user_data.get("media_list"))
+    await update.message.reply_media_group(await image_proposal(image_list))
 
     await update.message.reply_text(random.choice(send_proposal_insta))
 
     caption = (
-        context.user_data.get("prompt")
+        prompt
         + "\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart"
     )
 
@@ -111,61 +109,48 @@ async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-
     await update.message.reply_text(random.choice(monstergpt_greetings))
 
-    context.user_data["prompt"] = openaiwrapper.create_randomized_prompt()
+    prompt = openaiwrapper.create_randomized_prompt()
 
-    await update.message.reply_text(f'"{context.user_data.get("prompt")}" 😻')
+    await update.message.reply_text(f'"{prompt}" 😻')
 
     await update.message.reply_text(random.choice(monstergpt_dalle))
 
-    await send_proposal(update, context)
+    await send_proposal(update, context, prompt)
 
     await update.message.reply_text(random.choice(monstergpt_bye))
-
-    context.user_data.clear()
 
     return ConversationHandler.END
 
 
 async def monstergpt_rerun(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-
     await update.message.reply_text(random.choice(monstergpt_rerun_greetings))
 
-    context.user_data["prompt"] = openaiwrapper.create_randomized_prompt()
+    prompt = openaiwrapper.create_randomized_prompt()
 
-    await update.message.reply_text(f'"{context.user_data.get("prompt")}" 😻\n\n')
+    await update.message.reply_text(f'"{prompt}" 😻\n\n')
 
     await update.message.reply_text(random.choice(monstergpt_rerun_dalle))
 
-    await send_proposal(update, context)
+    await send_proposal(update, context, prompt)
 
     await update.message.reply_text(random.choice(monstergpt_rerun_bye))
-
-    context.user_data.clear()
 
     return ConversationHandler.END
 
 
 async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data["prompt"] = update.message.text
     await update.message.reply_text(random.choice(prompt_dalle))
 
-    await send_proposal(update, context)
+    await send_proposal(update, context, update.message.text)
 
     await update.message.reply_text(random.choice(prompt_bye))
-
-    context.user_data.clear()
 
     return ConversationHandler.END
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data.clear()
-
     await update.message.reply_text(random.choice(cancel_bye))
 
     return ConversationHandler.END
