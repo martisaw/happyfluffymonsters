@@ -166,11 +166,11 @@ def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(os.getenv("TOKEN")).build()
-    handler = TypeHandler(
+    security_handler = TypeHandler(
         Update, security_callback
     )  # Making a handler for the type Update
     application.add_handler(
-        handler, -1
+        security_handler, -1
     )  # Default is 0, so we are giving it a number below 0
 
     conv_handler = ConversationHandler(
