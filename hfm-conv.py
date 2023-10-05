@@ -33,18 +33,15 @@ from telegram.ext import (
     ApplicationHandlerStop,
 )
 
-# Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# TODO Move file functionality to differen file :)
 image_folder_path = "img"
 if not os.path.exists(image_folder_path):
     os.makedirs(image_folder_path)
 
-# Load all environment variables
 load_dotenv("./hfm.env")
 
 if os.getenv("DEV_MODE") == "yes":
