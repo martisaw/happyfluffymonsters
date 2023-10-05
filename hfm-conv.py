@@ -1,22 +1,11 @@
-from dotenv import load_dotenv
-import os
-import logging
-import os
-import json
-from telegram import Update, InputMediaPhoto
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    ConversationHandler,
-    MessageHandler,
-    filters,
-    TypeHandler,
-    ApplicationHandlerStop,
-)
-from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
 from datetime import time
+from dotenv import load_dotenv
+import json
+import logging
+from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
+import os
 import random
+from security_handlers import security_callback
 from static_messages import (
     start_greetings,
     start_examples,
@@ -31,6 +20,18 @@ from static_messages import (
     prompt_bye,
     cancel_bye,
     monster_monday_reminder_greetings,
+    send_proposal_insta,
+)
+from telegram import Update, InputMediaPhoto
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+    TypeHandler,
+    ApplicationHandlerStop,
 )
 
 # Enable logging
@@ -100,20 +101,7 @@ async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_media_group(media=context.user_data.get("media_list"))
 
-    instagram_post_variations = [
-        "Save your favorite image and post it to Instagram for the world to see! 📸🌍",
-        "Don't forget to save your favorite image and share it on Instagram! 📷📤",
-        "Capture the moment: Save your favorite image and upload it to Instagram! 📸🌟",
-        "Time to show off your creativity: Save your favorite image and post it on Instagram! 🎨📷",
-        "Share the magic: Save your favorite image and let it shine on Instagram! ✨📤",
-        "Your masterpiece deserves the spotlight: Save it and post on Instagram! 🌟📸",
-        "Save that precious image and share it with your Instagram followers! 📸📤",
-        "Make your art Instagram-worthy: Save your favorite image and post it! 🎨📷",
-        "Don't keep it to yourself: Save your favorite image and share it on Instagram! 🌈📤",
-        "It's time for an Instagram moment: Save and post your favorite image! 📸🌟",
-    ]
-
-    await update.message.reply_text(random.choice(instagram_post_variations))
+    await update.message.reply_text(random.choice(send_proposal_insta))
 
     caption = (
         context.user_data.get("prompt")

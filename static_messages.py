@@ -171,3 +171,16 @@ monster_monday_reminder_greetings = [
     "Monday means monsters! 🌈👹",
     "Let's conquer this monster of a Monday! 💪👻",
 ]
+
+send_proposal_insta = [
+    "Save your favorite image and post it to Instagram for the world to see! 📸🌍",
+    "Don't forget to save your favorite image and share it on Instagram! 📷📤",
+    "Capture the moment: Save your favorite image and upload it to Instagram! 📸🌟",
+    "Time to show off your creativity: Save your favorite image and post it on Instagram! 🎨📷",
+    "Share the magic: Save your favorite image and let it shine on Instagram! ✨📤",
+    "Your masterpiece deserves the spotlight: Save it and post on Instagram! 🌟📸",
+    "Save that precious image and share it with your Instagram followers! 📸📤",
+    "Make your art Instagram-worthy: Save your favorite image and post it! 🎨📷",
+    "Don't keep it to yourself: Save your favorite image and share it on Instagram! 🌈📤",
+    "It's time for an Instagram moment: Save and post your favorite image! 📸🌟",
+]
