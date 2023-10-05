@@ -5,7 +5,6 @@ import logging
 from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
 import os
 import random
-from security_handlers import security_callback
 from static_messages import (
     start_greetings,
     start_examples,
