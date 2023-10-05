@@ -2,7 +2,8 @@ from dotenv import load_dotenv
 import os
 import logging
 import os
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, InputMediaPhoto
+import json
+from telegram import Update, InputMediaPhoto
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -14,7 +15,7 @@ from telegram.ext import (
     ApplicationHandlerStop,
 )
 from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
-from datetime import time, timezone
+from datetime import time
 import random
 from static_messages import (
     start_greetings,
@@ -57,11 +58,11 @@ else:
 PROMPT = range(1)
 
 # Only allows predefined users
-SPECIAL_USERS = [int(os.getenv("MASTER_USER"))]
+SPECIAL_USERS = json.loads(os.getenv("MASTER_USER_ARRAY"))
 
 
 async def security_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id in SPECIAL_USERS:
+    if update.effective_user.name in SPECIAL_USERS:
         pass
     else:
         await update.effective_message.reply_text(
