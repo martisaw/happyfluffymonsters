@@ -58,6 +58,7 @@ PROMPT = range(1)
 
 # Only allows predefined users
 SPECIAL_USERS = json.loads(os.getenv("MASTER_USER_ARRAY"))
+MONSTER_MONDAY_CHAT_ID = os.getenv("REMINDER_CHAT_ID")
 
 
 async def security_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -170,7 +171,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def monster_monday_reminder(context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
-        chat_id=SPECIAL_USERS[0], text=random.choice(monster_monday_reminder_greetings)
+        chat_id=MONSTER_MONDAY_CHAT_ID,
+        text=random.choice(monster_monday_reminder_greetings),
     )
 
 
