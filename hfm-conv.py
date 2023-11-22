@@ -1,8 +1,29 @@
+from datetime import time
 from dotenv import load_dotenv
-import os
+import json
 import logging
+from PIL import Image
+from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
 import os
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, InputMediaPhoto
+import random
+import requests
+from static_messages import (
+    start_greetings,
+    start_examples,
+    start_monstergpt,
+    monstergpt_greetings,
+    monstergpt_dalle,
+    monstergpt_bye,
+    monstergpt_rerun_greetings,
+    monstergpt_rerun_dalle,
+    monstergpt_rerun_bye,
+    prompt_dalle,
+    prompt_bye,
+    cancel_bye,
+    monster_monday_reminder_greetings,
+    send_proposal_insta,
+)
+from telegram import Update, InputMediaPhoto
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -11,12 +32,9 @@ from telegram.ext import (
     MessageHandler,
     filters,
     TypeHandler,
-    ApplicationHandlerStop
+    ApplicationHandlerStop,
 )
-from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
-from instawrapper import InstaWrapper, InstaWrapperMock
 
-# Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
@@ -26,195 +44,170 @@ image_folder_path = "img"
 if not os.path.exists(image_folder_path):
     os.makedirs(image_folder_path)
 
-# Load all environment variables
-load_dotenv('./hfm.env')
+load_dotenv("./hfm.env")
 
-if os.getenv('DEV_MODE') == 'yes':
+if os.getenv("DEV_MODE") == "yes":
     logger.info("***** running in DEV mode *****")
     openaiwrapper = OpenAiWrapperMock()
-    instawrapper = InstaWrapperMock()
-    
+
 else:
     logger.info("***** running in PROD mode *****!")
-    openaiwrapper = OpenAiWrapper(os.getenv('OPENAI_API_KEY'), 4, 1024)
-    # instawrapper = InstaWrapper(os.getenv('INSTA_USER'), os.getenv('INSTA_PW')) 
-    # FIXME InstaWrapper can't login currently because most likely the ip got blocked -> Use "residential" Proxy instead
-    instawrapper = InstaWrapperMock()
+    openaiwrapper = OpenAiWrapper(os.getenv("OPENAI_API_KEY"), 4, 1024)
 
-PROMPT, SELECT, SUMMARY = range(3)
+PROMPT = range(1)
 
 # Only allows predefined users
-SPECIAL_USERS = [int(os.getenv('MASTER_USER'))]
+SPECIAL_USERS = json.loads(os.getenv("MASTER_USER_ARRAY"))
+MONSTER_MONDAY_CHAT_ID = os.getenv("REMINDER_CHAT_ID")
 
-# Security
-async def callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id in SPECIAL_USERS:
+
+async def security_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.name in SPECIAL_USERS:
         pass
     else:
-        await update.effective_message.reply_text("Hey! You are not allowed to use me! 🚨🚓")
+        await update.effective_message.reply_text(
+            "Hey! You are not allowed to use me! 🚨🚓"
+        )
         raise ApplicationHandlerStop
 
-async def image_proposal(image_list):
-
-    count = 1
-    reply_list = []
-    media_list = []
-    for image in image_list:
-        caption = '#' + str(count)
-        media_list.append(InputMediaPhoto(media=image['url'], caption=caption))
-        reply_list.append(caption)
-        count = count + 1
-    
-    reply_keyboard = [reply_list]
-
-    # overwrite reply_keyboard if more than two (formatting)
-    if len(reply_list) > 2:
-        chunked_reply_list = []
-        chunk_size = 2
-
-        for i in range(0, len(reply_list), chunk_size):
-            chunked_reply_list.append(reply_list[i:i+chunk_size])
-
-        reply_keyboard = chunked_reply_list
-
-    return (media_list, reply_keyboard)
-
-async def send_proposal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    image_list = openaiwrapper.create_images(context.user_data.get('prompt'))
-    
-    media_and_keyboard = await image_proposal(image_list)
-
-    context.user_data['media_list'] = media_and_keyboard[0]
-    context.user_data['media_keyboard'] = media_and_keyboard[1]
-    
-    await update.message.reply_media_group(media=context.user_data.get('media_list'))
-
-    await update.message.reply_text(
-        'Which one would you like to post on Instagram? ↗ \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
-            context.user_data.get('media_keyboard'), one_time_keyboard=True
-        )
-    )
-
-async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-
-    await update.message.reply_text("Alrighty it's time for MONSTERGPT.\n\nLet me think about a prompt for a second ... 💬")
-
-    context.user_data['prompt'] = openaiwrapper.create_randomized_prompt()
-    
-    await update.message.reply_text(f'Okay, here you go: "{context.user_data.get("prompt")}" 😻\n\nNow I will let DALLE-2 generate some Images ... 🖼️')
-    
-    await send_proposal(update, context)
-
-    return SELECT
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data.clear()
+    await update.message.reply_text(random.choice(start_greetings))
 
-    await update.message.reply_text(
-        'Hey there! I\'m Bubbles 🫧, your happy fluffy monster creator.\n\nWhat are my peers doing today?' 
-    )
+    await update.message.reply_text(random.choice(start_examples))
+
+    await update.message.reply_text(random.choice(start_monstergpt))
 
     return PROMPT
 
-async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    
-    context.user_data['prompt'] = update.message.text
 
-    await update.message.reply_text(
-        'Perfect ✨ I\'ll ask dalle to create some images. This will take some time. Relax for a bit 💆'
+async def image_proposal(prompt, image_list):
+    count = 1
+    media_list = []
+    filename = prompt.replace(" ", "_").replace(".", "").lower()
+    for image in image_list:
+        caption = "#" + str(count)
+        url = image["url"]
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                with open("./img/" + filename + caption + ".png", "wb") as img_file:
+                    img_file.write(response.content)
+        except:
+            pass
+        media_list.append(InputMediaPhoto(media=url, caption=caption))
+        count = count + 1
+    return media_list
+
+
+def save_images(image_list):
+    print(image_list)
+
+
+async def send_proposal(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str
+):
+    image_list = openaiwrapper.create_images(prompt)
+    save_images(image_list)
+    await update.message.reply_media_group(await image_proposal(prompt, image_list))
+
+    await update.message.reply_text(random.choice(send_proposal_insta))
+
+    caption = (
+        prompt
+        + "\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart"
     )
 
-    await send_proposal(update, context)
-    
-    return SELECT
+    await update.message.reply_text(caption)
 
-async def select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
-    tmp_select = update.message.text
-    tmp_url = None
-    for media_item in context.user_data.get('media_list'):
-        if media_item.caption == tmp_select:
-            tmp_url = media_item.media
-    caption = context.user_data.get('prompt') + '\n\n#happyfluffymonsters #monster #digitalart #dalle #openai #aiart #opensea #nft #blockchain #cryptoart'
-    await update.message.reply_text('All done. Please review the following instagram post 🕵️')
-    sent_message = await update.message.reply_photo(photo=tmp_url, caption=caption) # FIXME Two times downloading the picture?
-    await update.message.reply_text('Send /post if you want to post on instagram, /reselect to choose another image or /cancel this 😎')
-    
-    # TODO Save all pictures!
-    # Move the code below to the final function -> In case of reselect this is overwritten
-    sent_photo = await sent_message.photo[-1].get_file()
-    file_name = context.user_data.get('prompt').replace(" ", "_") 
-    if file_name.endswith('.'):
-        file_name = file_name + "jpg"
-    else:
-        file_name = file_name + ".jpg"
-    file_path = await sent_photo.download_to_drive("./"+ image_folder_path + "/" + file_name)
-    context.user_data['ig_photo']=file_path
-    context.user_data['ig_caption']=caption
+async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(random.choice(monstergpt_greetings))
 
-    return SUMMARY
+    prompt = openaiwrapper.create_randomized_prompt()
 
-async def reselect(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    
-    await update.message.reply_text(
-        'Choose again.'
-    )
-    
-    await update.message.reply_media_group(media=context.user_data.get('media_list'))
+    await update.message.reply_text(f'"{prompt}" 😻')
 
-    await update.message.reply_text(
-        'Which one would you like to post on Instagram? ↗ \n\nYou can /cancel this.', reply_markup=ReplyKeyboardMarkup(
-            context.user_data.get('media_keyboard'), one_time_keyboard=True
-        )
-    )
-    
-    return SELECT
+    await update.message.reply_text(random.choice(monstergpt_dalle))
 
-async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    
-    await update.message.reply_text('⚙️ processing ...')
-    
-    instawrapper.upload_photo(context.user_data.get('ig_photo'), context.user_data.get('ig_caption'))
-    
-    await update.message.reply_text('Posted! See ya next time 😻')
-    
-    context.user_data.clear()
-    
+    await send_proposal(update, context, prompt)
+
+    await update.message.reply_text(random.choice(monstergpt_bye))
+
     return ConversationHandler.END
+
+
+async def monstergpt_rerun(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(random.choice(monstergpt_rerun_greetings))
+
+    prompt = openaiwrapper.create_randomized_prompt()
+
+    await update.message.reply_text(f'"{prompt}" 😻\n\n')
+
+    await update.message.reply_text(random.choice(monstergpt_rerun_dalle))
+
+    await send_proposal(update, context, prompt)
+
+    await update.message.reply_text(random.choice(monstergpt_rerun_bye))
+
+    return ConversationHandler.END
+
+
+async def prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text(random.choice(prompt_dalle))
+
+    await send_proposal(update, context, update.message.text)
+
+    await update.message.reply_text(random.choice(prompt_bye))
+
+    return ConversationHandler.END
+
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data.clear()
-    
-    await update.message.reply_text(
-        "Bye! I hope we can talk again some day 😿", reply_markup=ReplyKeyboardRemove()
-    )
+    await update.message.reply_text(random.choice(cancel_bye))
 
     return ConversationHandler.END
+
+
+async def monster_monday_reminder(context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=MONSTER_MONDAY_CHAT_ID,
+        text=random.choice(monster_monday_reminder_greetings),
+    )
 
 
 def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token(os.getenv('TOKEN')).build()
-    handler = TypeHandler(Update, callback) # Making a handler for the type Update
-    application.add_handler(handler, -1) # Default is 0, so we are giving it a number below 0
-    
-    # application.add_handler(CommandHandler('monstergpt', monstergpt))
-   
-    # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
+    application = Application.builder().token(os.getenv("TOKEN")).build()
+    security_handler = TypeHandler(
+        Update, security_callback
+    )  # Making a handler for the type Update
+    application.add_handler(
+        security_handler, -1
+    )  # Default is 0, so we are giving it a number below 0
+
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start), CommandHandler('monstergpt', monstergpt)],
+        entry_points=[
+            CommandHandler("monster", start),
+            CommandHandler("start", start),
+            CommandHandler("monstergpt", monstergpt),
+            CommandHandler("rerun", monstergpt_rerun),
+        ],
         states={
-            PROMPT:[MessageHandler(filters.TEXT & ~filters.COMMAND, prompt)],
-            SELECT:[MessageHandler(filters.TEXT & ~filters.COMMAND, select)# filters.TEXT to unprecise!
-                    ], 
-            SUMMARY: [CommandHandler('reselect', reselect), CommandHandler('post', summary)],
+            PROMPT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, prompt),
+                CommandHandler("monstergpt", monstergpt),
+            ],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
     application.add_handler(conv_handler)
+    job_queue = application.job_queue
+
+    # UTC time!
+    monster_monday = job_queue.run_daily(monster_monday_reminder, time(8, 30), (1,))
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling()

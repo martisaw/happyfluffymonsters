@@ -4,3 +4,4 @@ __pycache__
 instagrapi-session.json
 *.jpg
 *.png
+.vscode
