@@ -26,7 +26,7 @@ DALLE_N = 4
 
 # Telegram Bot Configuration
 if platform.system() == "Windows":
-    DEV_MODE = False
+    DEV_MODE = True
     BOT_TOKEN = os.getenv("DEV_TOKEN")
     logger.info("********** DEV MODE **********")
 else:
