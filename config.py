@@ -10,11 +10,14 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Load all environment variables
-load_dotenv(os.path.abspath("hfm.env"))
-
 # General
-IMAGE_FOLDER_PATH = os.path.abspath("img")
+current_file_path = os.path.abspath(__file__)
+current_directory_path = os.path.dirname(current_file_path)
+
+IMAGE_FOLDER_PATH = os.path.abspath(current_directory_path + "/img")
+
+# Load all environment variables
+load_dotenv(os.path.abspath(current_directory_path + "/hfm.env"))
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
