@@ -32,13 +32,12 @@ from telegram.ext import (
 )
 from prompt import random_prompt
 from image import images
-from config import BOT_TOKEN, SPECIAL_USERS, MONSTER_MONDAY_CHAT_ID
+from config import BOT_TOKEN, SPECIAL_USERS, MONSTER_MONDAY_CHAT_ID, IMAGE_FOLDER_PATH
 
 logger = logging.getLogger(__name__)
 
-image_folder_path = "img"
-if not os.path.exists(image_folder_path):
-    os.makedirs(image_folder_path)
+if not os.path.exists(IMAGE_FOLDER_PATH):
+    os.makedirs(IMAGE_FOLDER_PATH)
 
 
 PROMPT = range(1)
@@ -84,7 +83,7 @@ async def image_proposal(prompt, image_list):
 
 
 def save_images(image_list):
-    print(image_list)
+    logger.info("to implement save images to some storage?")
 
 
 async def send_proposal(

@@ -24,5 +24,5 @@ def images(prompt):
             ),
         ]
     styled_prompt = add_styles(prompt)
-    logger.info("images (styled_prompt): ", styled_prompt)
+    logger.info("images (%s): ", styled_prompt)
     return generate_images(styled_prompt, DALLE_MODEL, DALLE_N)

@@ -13,13 +13,16 @@ logger = logging.getLogger(__name__)
 # Load all environment variables
 load_dotenv("./hfm.env")
 
+# General
+IMAGE_FOLDER_PATH = "img"
+
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ACTIVITY_TEMPERATURE = 1.2
 PROMPT_TEMPERATURE = 1.0
 GPT_MODEL = "gpt-3.5-turbo-1106"
-DALLE_MODEL = "dall-e-3"
-DALLE_N = 1
+DALLE_MODEL = "dall-e-2"
+DALLE_N = 4
 
 # Telegram Bot Configuration
 if platform.system() == "Windows":

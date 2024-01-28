@@ -4,24 +4,24 @@ from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
-openai_client = OpenAI(OPENAI_API_KEY)
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 def generate_images(prompt, model, n):
     try:
-        logger.info("generate_images (prompt, model, n): ", prompt, model, n)
+        logger.info("generate_images (%s, %s, %s): ", prompt, model, n)
         return openai_client.images.generate(
             model=model, prompt=prompt, n=n, user="happyfluffymonstersbot"
         ).data
     except Exception as e:
-        logging.error("Exception occured: ", e)
+        logging.error("Exception occured: %s", e)
         return []
 
 
 def generate_chat_completions(messages, model, temperature):
     try:
         logging.info(
-            "generate_chat_completions (messages, model, temperature): ",
+            "generate_chat_completions (%s, %s, %s): ",
             messages,
             model,
             temperature,
@@ -34,5 +34,5 @@ def generate_chat_completions(messages, model, temperature):
             .message.content
         )
     except Exception as e:
-        logging.error("Exception occured: ", e)
+        logging.error("Exception occured: %s", e)
         return "error occurred"

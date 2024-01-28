@@ -16,7 +16,7 @@ def random_activity(location_list):
             "content": f"Create a list for me with 10 unique activities to do in {random.choice(location_list)}. Then, choose one activity. Only return the activity. Maximum 5 words.",
         },
     ]
-    logger.info("random_activity (activity_prompt): ", activity_prompt[1].content)
+    logger.info("random_activity (%s): ", activity_prompt[1]["content"])
     response = generate_chat_completions(
         activity_prompt, GPT_MODEL, ACTIVITY_TEMPERATURE
     )
@@ -37,5 +37,5 @@ def random_prompt():
             "content": f"Write a short sentence in present with '{random.choice(monsters)}' and {activity}",
         },
     ]
-    logger.info("random_prompt (monster_prompt)", monster_prompt[1].content)
+    logger.info("random_prompt (%s)", monster_prompt[1]["content"])
     return generate_chat_completions(monster_prompt, GPT_MODEL, PROMPT_TEMPERATURE)
