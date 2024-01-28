@@ -56,16 +56,16 @@ monstergpt_greetings = [
 ]
 
 monstergpt_dalle = [
-    "Now, it's time to let DALL·E-2 work its magic! 🖼️✨",
-    "Let's unleash DALL·E-2 for some creative image generation! 🎨🌟",
-    "Prepare for image wonderment as DALL·E-2 takes the stage! 📷🪄",
-    "It's DALL·E-2's time to shine and craft stunning images! 🌆🚀",
-    "Watch in awe as DALL·E-2 brings images to life! 🌄🌠",
-    "DALL·E-2 is here to dazzle with its image-making prowess! 🌅📸",
-    "Ready for a visual treat? DALL·E-2 is set to create captivating images! 🎆🖼️",
-    "Let DALL·E-2 work its artistic magic and produce marvelous images! 🖌️🌈",
-    "DALL·E-2 is on the scene for some incredible image generation! 🌃🎨",
-    "Get ready to be amazed as DALL·E-2 crafts beautiful images! 🌌📷",
+    "Now, it's time to let DALL·E work its magic! 🖼️✨",
+    "Let's unleash DALL·E for some creative image generation! 🎨🌟",
+    "Prepare for image wonderment as DALL·E takes the stage! 📷🪄",
+    "It's DALL·E's time to shine and craft stunning images! 🌆🚀",
+    "Watch in awe as DALL·E brings images to life! 🌄🌠",
+    "DALL·E is here to dazzle with its image-making prowess! 🌅📸",
+    "Ready for a visual treat? DALL·E is set to create captivating images! 🎆🖼️",
+    "Let DALL·E work its artistic magic and produce marvelous images! 🖌️🌈",
+    "DALL·E is on the scene for some incredible image generation! 🌃🎨",
+    "Get ready to be amazed as DALL·E crafts beautiful images! 🌌📷",
 ]
 
 monstergpt_bye = [

@@ -1,9 +1,5 @@
 from datetime import time
-from dotenv import load_dotenv
-import json
 import logging
-from PIL import Image
-from openaiwrapper import OpenAiWrapper, OpenAiWrapperMock
 import os
 import random
 import requests
@@ -34,31 +30,18 @@ from telegram.ext import (
     TypeHandler,
     ApplicationHandlerStop,
 )
+from prompt import random_prompt
+from image import images
+from config import BOT_TOKEN, SPECIAL_USERS, MONSTER_MONDAY_CHAT_ID
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
 logger = logging.getLogger(__name__)
 
 image_folder_path = "img"
 if not os.path.exists(image_folder_path):
     os.makedirs(image_folder_path)
 
-load_dotenv("./hfm.env")
-
-if os.getenv("DEV_MODE") == "yes":
-    logger.info("***** running in DEV mode *****")
-    openaiwrapper = OpenAiWrapperMock()
-
-else:
-    logger.info("***** running in PROD mode *****!")
-    openaiwrapper = OpenAiWrapper(os.getenv("OPENAI_API_KEY"), 4, 1024)
 
 PROMPT = range(1)
-
-# Only allows predefined users
-SPECIAL_USERS = json.loads(os.getenv("MASTER_USER_ARRAY"))
-MONSTER_MONDAY_CHAT_ID = os.getenv("REMINDER_CHAT_ID")
 
 
 async def security_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -87,7 +70,7 @@ async def image_proposal(prompt, image_list):
     filename = prompt.replace(" ", "_").replace(".", "").lower()
     for image in image_list:
         caption = "#" + str(count)
-        url = image["url"]
+        url = image.url
         try:
             response = requests.get(url)
             if response.status_code == 200:
@@ -107,7 +90,7 @@ def save_images(image_list):
 async def send_proposal(
     update: Update, context: ContextTypes.DEFAULT_TYPE, prompt: str
 ):
-    image_list = openaiwrapper.create_images(prompt)
+    image_list = images(prompt)
     save_images(image_list)
     await update.message.reply_media_group(await image_proposal(prompt, image_list))
 
@@ -124,7 +107,7 @@ async def send_proposal(
 async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(random.choice(monstergpt_greetings))
 
-    prompt = openaiwrapper.create_randomized_prompt()
+    prompt = random_prompt()
 
     await update.message.reply_text(f'"{prompt}" 😻')
 
@@ -140,7 +123,7 @@ async def monstergpt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def monstergpt_rerun(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(random.choice(monstergpt_rerun_greetings))
 
-    prompt = openaiwrapper.create_randomized_prompt()
+    prompt = random_prompt()
 
     await update.message.reply_text(f'"{prompt}" 😻\n\n')
 
@@ -178,11 +161,8 @@ async def monster_monday_reminder(context: ContextTypes.DEFAULT_TYPE):
 
 def main() -> None:
     """Run the bot."""
-    # Create the Application and pass it your bot's token.
-    application = Application.builder().token(os.getenv("TOKEN")).build()
-    security_handler = TypeHandler(
-        Update, security_callback
-    )  # Making a handler for the type Update
+    application = Application.builder().token(BOT_TOKEN).build()
+    security_handler = TypeHandler(Update, security_callback)
     application.add_handler(
         security_handler, -1
     )  # Default is 0, so we are giving it a number below 0
