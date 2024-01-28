@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Load all environment variables
-load_dotenv(os.path.abspath("./hfm.env"))
+load_dotenv(os.path.abspath("hfm.env"))
 
 # General
 IMAGE_FOLDER_PATH = os.path.abspath("img")
