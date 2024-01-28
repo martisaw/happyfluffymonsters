@@ -30,6 +30,7 @@ if platform.system() == "Windows":
     BOT_TOKEN = os.getenv("DEV_TOKEN")
     logger.info("********** DEV MODE **********")
 else:
+    DEV_MODE = False
     BOT_TOKEN = os.getenv("TOKEN")
     logger.info("********** PROD MODE **********")
 SPECIAL_USERS = json.loads(
