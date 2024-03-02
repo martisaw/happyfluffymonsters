@@ -73,7 +73,12 @@ async def image_proposal(prompt, image_list):
         try:
             response = requests.get(url)
             if response.status_code == 200:
-                with open("./img/" + filename + caption + ".png", "wb") as img_file:
+                with open(
+                    os.path.abspath(
+                        IMAGE_FOLDER_PATH + "/" + filename + caption + ".png"
+                    ),
+                    "wb",
+                ) as img_file:
                     img_file.write(response.content)
         except:
             pass
