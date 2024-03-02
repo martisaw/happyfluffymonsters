@@ -16,11 +16,11 @@ def images(prompt):
         return [
             Image(
                 revised_prompt=prompt,
-                url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Friendly_stickman.svg/400px-Friendly_stickman.svg.png",
+                url="https://upload.wikimedia.org/wikipedia/commons/3/35/Basic_human_drawing.png",
             ),
             Image(
                 revised_prompt=prompt,
-                url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Friendly_stickman.svg/400px-Friendly_stickman.svg.png",
+                url="https://upload.wikimedia.org/wikipedia/commons/3/35/Basic_human_drawing.png",
             ),
         ]
     styled_prompt = add_styles(prompt)
