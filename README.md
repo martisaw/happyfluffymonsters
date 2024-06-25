@@ -28,4 +28,5 @@ https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_input
 
 1. Create virtual python environment
 2. Not entirely sure, but make the script executable for cron `chmod +x bot.py`
-3. Add to cron `crontab -e` = `@reboot sleep 15 && python bot.py` -> Sleep as a workaround of some networking issues on startup (something's not powered up yet)
+3. Use the /path/to/pip or /path/to/python to user venv
+4. Add to cron `crontab -e` = `@reboot sleep 60 && path/to/venv/python path/to/bot.py >> path/to/log 2>&1` -> Sleep as a workaround of some networking issues on startup (something's not powered up yet)
