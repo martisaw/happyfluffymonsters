@@ -38,4 +38,16 @@ def random_prompt():
         },
     ]
     logger.info("random_prompt (%s)", monster_prompt[1]["content"])
+    short_sentence = generate_chat_completions(
+        monster_prompt, GPT_MODEL, PROMPT_TEMPERATURE
+    )
+    monster_prompt.append(
+        {
+            "role": "assistant",
+            "content": short_sentence,
+        }
+    )
+    monster_prompt.append(
+        {"role": "user", "content": "Add a playful item or activity to this sentence."},
+    )
     return generate_chat_completions(monster_prompt, GPT_MODEL, PROMPT_TEMPERATURE)
