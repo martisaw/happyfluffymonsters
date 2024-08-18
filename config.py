@@ -23,7 +23,7 @@ load_dotenv(os.path.abspath(current_directory_path + "/hfm.env"))
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ACTIVITY_TEMPERATURE = 1.2
 PROMPT_TEMPERATURE = 1.0
-GPT_MODEL = "gpt-3.5-turbo-1106"
+GPT_MODEL = "gpt-4o-mini"
 DALLE_MODEL = "dall-e-2"
 DALLE_N = 4
 

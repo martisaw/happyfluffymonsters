@@ -13,7 +13,7 @@ def random_activity(location_list):
         {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
-            "content": f"Create a list for me with 10 unique activities to do in {random.choice(location_list)}. Then, choose one activity. Only return the activity. Maximum 5 words.",
+            "content": f"Create a list for me with 10 unique activities to do in {random.choice(location_list)}. Then, choose one activity. Only return the activity. Maximum 5 words. No markdown, just plain text.",
         },
     ]
     logger.info("random_activity (%s): ", activity_prompt[1]["content"])
