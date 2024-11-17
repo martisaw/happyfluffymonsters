@@ -1,0 +1,7 @@
+venv
+hfm.env.dev
+hfm.env.prod
+__pycache__
+*.jpg
+*.png
+.vscode
