@@ -1,6 +1,6 @@
 # happyfluffymonsters
 
-Powering @happyfluffymonsters Telegram chatbot.
+Powering @happyfluffymonsters Telegram chatbot. Read my [blog post](https://blog.sawilla.cloud/the-happy-fluffy-monsters-telegram-chatbot/).
 
 ## Conventional Commits
 
@@ -28,5 +28,7 @@ Use `./venv/Scripts/activate.ps1` to activate the virtual environment.
 ## Configuration Properties
 
 Check out the sample config file `hfm.env.dev.example`. I'll have two Bots: One for Developing (`hfm.env.dev`) and the other for Production (`hfm.env.prod`). To use the prod-environmnent, I have to set an environment variable called `ENV_MODE=prod`.
+
+The telegram chat_id of you and the bot can be easily figured out. Check some guides for that.
 
 In Powershell, I can to this by setting `$env:ENV_MODE = "prod"`.
