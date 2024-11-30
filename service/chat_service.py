@@ -1,7 +1,9 @@
-from facade.openai_client import generate_text
+from facade.openai_client import generate_text, generate_text_with_structured_output
 from service.prompt_vars import random_location, random_monster
 import logging
+import random
 from config import GPT_MODEL, ACTIVITY_TEMPERATURE, PROMPT_TEMPERATURE, ENV_IS_DEV
+from structured_outputs.pydantic_classes import Activities
 
 
 logger = logging.getLogger(__name__)
@@ -12,26 +14,16 @@ def _get_activity_for_location(location):
         {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
-            "content": f"Create a list for me with 10 unique activities to do in {location}. Then, choose one activity. Only return the activity. Maximum 5 words. No markdown, just plain text.",
+            "content": f"Create a list for me with 10 unique activities to do in {location}. Only return the activity. Maximum 5 words. Plain Text.",
         },
     ]
-    # FIXME when underlying functions returns an error string, this will not work!
+    # FIXME refusal case not handled
     logger.info("random_activity (%s): ", messages[1]["content"])
-    response = generate_text(messages, GPT_MODEL, ACTIVITY_TEMPERATURE)["content"]
-    # Return looks like this:
-    # 1. Read a new book.
-    # 2. Meditate for relaxation.
-    # 3. Have a spa night.
-    # 4. Write in a journal.
-    # 5. Do a puzzle.
-    # 6. Try online yoga class.
-    # 7. Experiment with new recipes.
-    # 8. Create a vision board.
-    # 9. Watch a documentary.
-    # 10. Listen to calming music.
-
-    # Experiment with new recipes.
-    return response.split("\n")[-1]
+    response = generate_text_with_structured_output(
+        messages, GPT_MODEL, ACTIVITY_TEMPERATURE, Activities
+    ).activities
+    logger.info("RESPONSE %s", response)
+    return random.choice(response)
 
 
 def generate_random_prompt():

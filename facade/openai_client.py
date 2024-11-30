@@ -25,6 +25,33 @@ def _message_to_dict(ChatCompletionsMessage):
     }
 
 
+# ! BETA !
+def generate_text_with_structured_output(
+    messages, model, temperature, response_format
+) -> dict:
+    try:
+        logging.info(
+            "generate_text_with_structured_output(%s, %s, %s, %s): ",
+            messages,
+            model,
+            temperature,
+            response_format,
+        )
+        message = (
+            openai_client.beta.chat.completions.parse(
+                model=model,
+                messages=messages,
+                response_format=response_format,
+            )
+            .choices[0]
+            .message.parsed  # Does not handle refusal case
+        )
+        return message
+    except Exception as e:
+        logging.error("Exception occured: %s", e)
+        return "error occurred"
+
+
 def generate_text(messages, model, temperature) -> dict:
     try:
         logging.info(
